@@ -1,0 +1,10 @@
+.env
+*.key
+clients/*
+!clients/.gitkeep
+*.csv
+*.jsonl
+*_output/
+__pycache__/
+*.py[cod]
+.venv/
