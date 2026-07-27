@@ -9,6 +9,7 @@ import threading
 import time
 import unicodedata
 import urllib.parse
+import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -52,11 +53,6 @@ TRANSIENT_MESSAGES = {"Limited", "Timeout", "SPAM Block", "Mx Error", "Greyliste
 DEAD_MESSAGES = {"No Mx"}
 KNOWN_MESSAGES = {"Accepted", "Rejected", "Catch-All", "No Mx"} | TRANSIENT_MESSAGES
 API_URL = "https://happy.mailtester.ninja/ninja"
-DEFAULT_INPUT = (
-    "Productivity-Apps,-VP-Founder,-2-200,-US,-CA,-UK-Default-view-export-"
-    "1784802185955.csv"
-)
-
 SPECIAL_TRANSLITERATION = str.maketrans(
     {
         "\u0111": "d",
@@ -436,17 +432,17 @@ def write_dry_outputs(output_dir, out_fields, rows, skipped):
     write_verified_send_ready(output_dir / "verified_send_ready.csv", out_fields, enriched_rows)
 
 
-def print_gate1_report(rows, out_fields, usable, skipped, interval_ms, daily_cap):
+def print_gate1_report(rows, out_fields, usable, skipped, output_dir, interval_ms, daily_cap):
     domain_counts, distribution = contacts_per_domain_distribution(usable)
     budget = budget_math(len(usable), len(domain_counts), interval_ms)
     skip_reasons = Counter(item["skip_reason"] for item in skipped)
     first_name_only = [contact for contact in usable if contact["first_name_only"]]
     first_name_only_with_peer = sum(1 for contact in first_name_only if domain_counts[contact["domain"]] > 1)
 
-    if not (31_700 <= len(usable) <= 32_500):
+    if not usable:
         raise SystemExit(
-            "Gate 1 stopped: revised usable count differs materially from expected. "
-            f"Got {len(usable):,} usable and {len(skipped):,} skipped."
+            "Gate 1 stopped: no usable contacts were detected. "
+            "Check the input columns before making any API calls."
         )
 
     print("GATE 1 DRY RUN")
@@ -487,12 +483,38 @@ def print_gate1_report(rows, out_fields, usable, skipped, interval_ms, daily_cap
             f" -> first={contact['first_name']}, variants={'|'.join(contact['last_name_variants'])}, domain={contact['domain']}{mini}"
         )
     print("enriched_all.csv header:")
-    print(read_header_line(Path("email_engine_output") / "enriched_all.csv"))
+    print(read_header_line(output_dir / "enriched_all.csv"))
 
 
 def read_header_line(path):
     with path.open("r", encoding="utf-8", newline="") as handle:
         return handle.readline().rstrip("\r\n")
+
+
+def print_status(output_dir):
+    """Print checkpoint progress without modifying files or calling the API."""
+    results_path = output_dir / "results.jsonl"
+    usage_path = output_dir / "daily_usage.json"
+    result_count = 0
+    if results_path.exists():
+        with results_path.open("r", encoding="utf-8") as handle:
+            result_count = sum(1 for line in handle if line.strip())
+    usage = {}
+    if usage_path.exists():
+        try:
+            usage = json.loads(usage_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            usage = {}
+    print("CHECKPOINT STATUS")
+    print(f"Output directory: {output_dir}")
+    print(f"Recorded API results: {result_count:,}")
+    print(f"API results today: {int(usage.get(date.today().isoformat(), 0)):,}")
+    for filename in ("enriched_all.csv", "verified_send_ready.csv", "domain_patterns.csv"):
+        path = output_dir / filename
+        if path.exists():
+            print(f"{filename}: {count_csv_data_rows(path):,} rows")
+        else:
+            print(f"{filename}: not created yet")
 
 
 def read_round_trip_rows(path, limit=3):
@@ -611,8 +633,15 @@ class MailTesterClient:
             with self.io_lock:
                 self.request_domains.append(domain)
         query = urllib.parse.urlencode({"email": email, "key": self.key})
-        with urllib.request.urlopen(f"{API_URL}?{query}", timeout=45) as response:
-            data = json.loads(response.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(f"{API_URL}?{query}", timeout=45) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            if error.code not in {408, 429, 500, 502, 503, 504}:
+                raise
+            data = {"message": "Timeout", "code": f"http_{error.code}"}
+        except (urllib.error.URLError, TimeoutError):
+            data = {"message": "Timeout", "code": "network_error"}
 
         checked_at = datetime.now(timezone.utc).isoformat()
         message = canonical_message(data.get("message", ""))
@@ -1452,7 +1481,7 @@ def run_diagnostic(usable, output_dir, interval_ms, daily_cap, workers, count):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Domain-first email permutation engine")
-    parser.add_argument("--input", default=DEFAULT_INPUT)
+    parser.add_argument("--input")
     parser.add_argument("--output-dir", default="email_engine_output")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--live-sample", action="store_true")
@@ -1464,6 +1493,7 @@ def parse_args():
     parser.add_argument("--interval-ms", type=int, default=180)
     parser.add_argument("--daily-cap", type=int, default=500_000)
     parser.add_argument("--roundtrip-only", action="store_true")
+    parser.add_argument("--status", action="store_true", help="read checkpoint progress without API calls")
     return parser.parse_args()
 
 
@@ -1472,8 +1502,13 @@ def main():
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     random.seed(42)
     args = parse_args()
-    input_path = Path(args.input)
     output_dir = Path(args.output_dir)
+    if args.status:
+        print_status(output_dir)
+        return
+    if not args.input:
+        raise SystemExit("--input is required unless --status is used.")
+    input_path = Path(args.input)
     rows, fieldnames, out_fields, usable, skipped, duplicates = stage0_load_normalize(input_path, output_dir)
 
     if args.roundtrip_only:
@@ -1502,7 +1537,7 @@ def main():
 
     if args.dry_run:
         write_dry_outputs(output_dir, out_fields, rows, skipped)
-        print_gate1_report(rows, out_fields, usable, skipped, args.interval_ms, args.daily_cap)
+        print_gate1_report(rows, out_fields, usable, skipped, output_dir, args.interval_ms, args.daily_cap)
         print("Gate 1 complete. Stopping for approval before any API calls.")
         return
 

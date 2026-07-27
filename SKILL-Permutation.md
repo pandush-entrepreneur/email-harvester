@@ -100,6 +100,21 @@ Treat these three groups differently. This is where naive implementations go wro
 
 `Timeout` and `SPAM Block` do not mean the address is bad. Never write them into the invalid bucket. Push them to a retry queue and re-run at the end of the pass, up to 2 retries with backoff.
 
+Treat HTTP 408, 429, and 5xx responses plus network errors as transient `Timeout` results too. Persist the checkpoint, then let the retry queue handle them. A temporary provider 502 must never terminate an otherwise resumable run.
+
+### Learn from completed runs
+
+Save aggregate-only results to `RUN_HISTORY.md` after every full run: raw rows, invalid rows, duplicate contacts, unique usable contacts, status counts, request count, catch-all rate, and verified yield. Never place lead rows, outputs, or secrets in the history.
+
+Use the latest comparable run to size future pulls:
+
+```
+raw leads needed = target verified / verified_from_raw
+unique usable leads needed = target verified / verified_from_unique_usable
+```
+
+The TRI run (175,204 raw rows, 33,512 verified) established a 19.13% raw-to-verified and 32.93% unique-usable-to-verified benchmark. It also had a 39.57% duplicate-row rate; dedupe upstream before predicting paid verification volume.
+
 ---
 
 ## Pipeline

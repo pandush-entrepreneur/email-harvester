@@ -32,6 +32,27 @@ mkdir -p clients/acme
 scp acme-list.csv user@server:~/harvester/clients/acme/input.csv
 ```
 
+## Planning and observing a run
+
+Run the dry run first and save its aggregate totals in `RUN_HISTORY.md`. Do not use a fixed universal yield. The TRI benchmark was 19.13% verified from raw rows and 32.93% from unique usable contacts, but those rates vary by source and segment.
+
+For a target number of verified emails, use the latest comparable benchmark:
+
+```
+raw leads needed = target verified / raw-to-verified rate
+unique usable needed = target verified / usable-to-verified rate
+```
+
+Deduplicate before the live run whenever possible. It preserves every source row in `enriched_all.csv`, but avoids spending verification requests on repeat contacts.
+
+Read progress without connecting to tmux or calling the API:
+
+```bash
+cd ~/harvester && .venv/bin/python email_engine.py --output-dir clients/acme/output --status
+```
+
+For unattended work, start the process from a small checked script or a quoted shell script, not a long inline SSH command. Use Python's unbuffered mode (`-u`) when redirecting logs. Confirm progress by watching the timestamp and line count of `results.jsonl`; a surviving tmux session alone does not prove that the worker is active.
+
 Then P1 → P2 → P3 from PROMPTS.md.
 
 **tmux is not optional.** Without it the job dies the moment SSH drops.
@@ -133,3 +154,4 @@ Every row here actually happened during the build, with the fix that worked.
 | Contacts silently missing | Accented names not transliterated | NFKD normalize, strip combining marks |
 | ~5% of list dropped at load | Truncated LinkedIn surnames treated as invalid | Keep as `first_name_only`; `first` and `firstl` need no surname |
 | Job dies on disconnect | No tmux | Always tmux |
+| Job stops on HTTP 502/503/504 or network error | Transport exception was not classified | Record it as transient `Timeout`, retry in the retry queue, and resume from `results.jsonl` |

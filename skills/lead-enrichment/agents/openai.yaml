@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lead Enrichment"
+  short_description: "Guided server-based CSV email enrichment"
+  default_prompt: "Use $lead-enrichment to guide my new lead file from intake through verified outputs."
