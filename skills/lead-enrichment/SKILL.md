@@ -27,7 +27,7 @@ Proceed automatically through these stages and send concise progress updates. St
 5. Monitor checkpoint progress with the engine’s read-only `--status` command or `results.jsonl`, not merely the existence of a tmux session.
 6. Resume from `results.jsonl` after interruptions. Treat HTTP 408, 429, 5xx, and network failures as transient timeouts; do not discard completed work.
 7. On completion, validate output row counts, download `enriched_all.csv` and `verified_send_ready.csv`, package the server output, and report the aggregate outcome.
-8. Record aggregate-only metrics in the project’s `RUN_HISTORY.md`. Rotate any API key that was exposed outside the server.
+8. Record aggregate-only metrics in the project’s `RUN_HISTORY.md`. Recalculate its cumulative proof point and update the matching `README.md` headline after every completed full run. Count processed input rows, verified send-ready addresses, and API requests across all recorded runs; retain each run’s separate unique-usable and duplicate rates. Rotate any API key that was exposed outside the server.
 
 ## Output rules
 

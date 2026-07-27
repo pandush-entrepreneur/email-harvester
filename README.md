@@ -2,9 +2,9 @@
 
 Turns any contact list with **first name, last name, company domain** into verified work emails.
 
-No per-contact data cost. Runs against a MailTester Ninja key. Typical yield is around 30% fully verified at roughly 0.7 API requests per contact.
+No per-contact data cost. Runs against a MailTester Ninja key. Yield depends on list quality, duplicates, and catch-all domains.
 
-Built and proven on a 33,187-contact list: **10,282 verified addresses, 49,266 requests, zero marginal cost.** Paid enrichment for the same list quotes at $3,000 to $5,000.
+Built and proven across **208,391 processed lead rows**: **43,794 verified addresses from 207,841 MailTester requests**, with zero marginal data cost. See [RUN_HISTORY.md](RUN_HISTORY.md) for the aggregate record and per-run benchmarks. Update these cumulative figures after every completed enrichment.
 
 ---
 
@@ -84,17 +84,17 @@ Truncated LinkedIn surnames (`Jonathan K.`) are kept, not dropped — two of the
 
 ## Expected yield
 
-Measured on 33,187 small B2B SaaS contacts:
+Latest comparable profile: TRI, a small B2B software list with 175,204 raw rows and 101,774 unique usable contacts.
 
-| Status | Share |
-|---|---|
-| `verified` | 31% |
-| `catchall_guess` | 34% |
-| `check_failed` | 15% |
-| `person_invalid` | 8% |
-| other | 12% |
+| Status | Share of raw rows | Share of unique usable contacts |
+|---|---:|---:|
+| `verified` | 19.13% | 32.93% |
+| `catchall_guess` | 21.19% | 36.48% |
+| `check_failed` | 5.82% | 10.02% |
+| `person_invalid` | 6.00% | 10.34% |
+| other | 5.95% | 10.23% |
 
-**Tell clients one third up front.** Catch-all rate drives it and varies by segment: very small companies on Google Workspace run 35 to 50%, larger companies lower.
+For similarly sourced lists, plan about **5.23 raw rows** or **3.04 unique usable contacts** per verified email. Recalculate from the latest comparable completed run before quoting a forecast. Catch-all rate drives the result and varies by segment.
 
 ---
 

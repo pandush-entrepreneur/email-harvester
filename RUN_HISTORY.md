@@ -2,6 +2,26 @@
 
 Store aggregate, non-identifying outcome data here after each completed client run. Do not put lead rows, API keys, or contact-level output in this file.
 
+## Cumulative proof point
+
+| Metric | Total |
+|---|---:|
+| Completed enrichment runs | 2 |
+| Processed lead rows | 208,391 |
+| Verified send-ready addresses | 43,794 |
+| MailTester requests | 207,841 |
+| Verified from processed rows | 21.02% |
+
+After every completed full run, append its aggregate record below, recalculate this table, and update the matching proof-point sentence in `README.md`. Count processed input rows, not only unique usable contacts; report the latter separately in each run record.
+
+## Reference run — prior benchmark
+
+| Metric | Count |
+|---|---:|
+| Processed contacts | 33,187 |
+| Verified addresses | 10,282 |
+| MailTester requests | 49,266 |
+
 ## TRI — 2026-07-25
 
 | Metric | Count | Rate |
