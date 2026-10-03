@@ -5,10 +5,11 @@
   <div class="auth-card">
     <div class="eyebrow">Private operations</div>
     <h1>Welcome back.</h1>
-    <p>Sign in to manage enrichment runs and download verified contacts.</p>
+    <p>Sign in once - Harvester, Performance, Enrichment and Launcher share this login.</p>
     {% if error %}<div class="alert">{{ error }}</div>{% endif %}
     <form method="post" class="stack">
-      <label>Admin password<input type="password" name="password" required autofocus></label>
+      <label>Email<input type="email" name="email" value="admin@therevenueinbox.com" autocomplete="username" required autofocus></label>
+      <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
       <button class="button" type="submit">Open harvester</button>
     </form>
   </div>

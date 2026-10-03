@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page"><a class="back" href="{{ url_for('dashboard') }}">← All lists</a><div class="detail-head"><div><div class="eyebrow">LIST DETAIL</div><h1>{{ job.name }}</h1><p>Uploaded {{ job.created_at[:10] }}</p></div><span id="state" class="status {{ job.state }}">{{ job.state.replace('_',' ') }}</span></div>
+<div class="metric-grid four"><article><span>Progress</span><strong id="percent">{{ job.percent }}%</strong><small id="stage">{{ job.stage }}</small></article><article><span>Verified contacts</span><strong id="verified">{{ "{:,}".format(job.verified) }}</strong><small id="verified-note">{{ job.verified_note }}</small></article><article><span>API checks</span><strong id="results">{{ "{:,}".format(job.results) }}</strong><small>recorded responses</small></article><article><span>Domains probed</span><strong id="domains">{{ "{:,}".format(job.domains) }}</strong><small>unique company domains checked</small></article></div>
+<div class="progress large"><i id="bar" style="width:{{ job.percent }}%"></i></div>
+{% if job.error %}<div class="alert">{{ job.error }}</div>{% endif %}
+<section class="panel actions"><div><h2>Queue controls</h2><p>A queued sample starts when earlier jobs finish. After a successful sample, its full run starts automatically.</p></div><div class="action-row">
+{% if job.state == 'dry_ready' %}<form method="post" action="{{ url_for('approve_sample', job_id=job.id) }}"><button class="button">Queue sample + full run</button></form>{% endif %}
+{% if job.state == 'sample_ready' %}<form method="post" action="{{ url_for('approve_full', job_id=job.id) }}"><button class="button">Approve full run</button></form>{% endif %}
+{% if job.state in ['running_sample','running_full'] and not job.external %}<form method="post" action="{{ url_for('pause_job', job_id=job.id) }}"><button class="button danger">Pause safely</button></form>{% endif %}
+{% if job.downloads.verified %}<a class="button secondary" href="{{ url_for('download', job_id=job.id, kind='verified') }}">Download verified</a>{% endif %}
+{% if job.downloads.enriched %}<a class="button secondary" href="{{ url_for('download', job_id=job.id, kind='enriched') }}">Download full results</a>{% endif %}
+</div></section>
+{% if job.report %}<section><div class="section-head"><div><h2>Validation report</h2><p>Current quality and request forecast.</p></div></div><div class="report-grid">{% for key,value in job.report.items() %}<div><span>{{ key.replace('_',' ') }}</span><strong>{{ value }}</strong></div>{% endfor %}</div></section>{% endif %}
+{% for title,log in logs.items() %}<details class="log"><summary>{{ title }} log</summary><pre>{{ log }}</pre></details>{% endfor %}
+</section>
+{% endblock %}
+{% block scripts %}<script>
+setInterval(async()=>{try{const j=await(await fetch('/api/jobs/{{ job.id }}')).json();document.querySelector('#state').textContent=j.state.replaceAll('_',' ');for(const k of ['verified','results','domains'])document.querySelector('#'+k).textContent=j[k].toLocaleString();document.querySelector('#percent').textContent=j.percent+'%';document.querySelector('#stage').textContent=j.stage;document.querySelector('#verified-note').textContent=j.verified_note;document.querySelector('#bar').style.width=j.percent+'%';}catch(e){}},2500);
+</script>{% endblock %}

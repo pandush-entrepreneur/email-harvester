@@ -1,4 +1,7 @@
 import csv
+import base64
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -120,10 +123,65 @@ def init_db():
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
-        if not session.get("authenticated"):
+        if not session.get("authenticated") and not sso_email():
             return redirect(url_for("login", next=request.path))
         return view(*args, **kwargs)
     return wrapped
+
+
+# --- shared sign-on ---------------------------------------------------------
+# One signed cookie on the parent domain (`tri_sso`) authenticates every Revenue Inbox app.
+# Payload is {"email": ..., "exp": ...}, signed with TRI_SSO_SECRET (HMAC-SHA256, base64url).
+
+SSO_COOKIE = "tri_sso"
+SSO_TTL_SECONDS = 60 * 60 * 24 * 30
+
+
+def _sso_secret() -> str:
+    return os.environ.get("TRI_SSO_SECRET", "")
+
+
+def sso_email() -> str:
+    """Returns the signed-in email from the shared cookie, or an empty string."""
+    secret = _sso_secret()
+    if not secret:
+        return ""
+    raw = request.cookies.get(SSO_COOKIE, "")
+    if "." not in raw:
+        return ""
+    payload, _, signature = raw.rpartition(".")
+    expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).digest()
+    try:
+        supplied = base64.urlsafe_b64decode(signature + "=" * (-len(signature) % 4))
+    except Exception:
+        return ""
+    if not hmac.compare_digest(expected, supplied):
+        return ""
+    try:
+        data = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+    except Exception:
+        return ""
+    email = str(data.get("email") or "")
+    exp = int(data.get("exp") or 0)
+    if not email or exp * 1000 < time.time() * 1000:
+        return ""
+    return email
+
+
+def sso_token(email: str) -> str:
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"email": email, "exp": int(time.time()) + SSO_TTL_SECONDS}).encode()
+    ).decode().rstrip("=")
+    signature = base64.urlsafe_b64encode(
+        hmac.new(_sso_secret().encode(), payload.encode(), hashlib.sha256).digest()
+    ).decode().rstrip("=")
+    return f"{payload}.{signature}"
+
+
+def sso_credentials_match(email: str, password: str) -> bool:
+    want_email = os.environ.get("TRI_SSO_EMAIL", "admin@therevenueinbox.com").strip().lower()
+    want_password = os.environ.get("TRI_SSO_PASSWORD", "")
+    return bool(want_password) and email.strip().lower() == want_email and secrets.compare_digest(password, want_password)
 
 
 def unique_slug(name, table="jobs"):
@@ -487,18 +545,35 @@ def login():
     error = None
     if request.method == "POST":
         supplied = request.form.get("password", "")
+        email = (request.form.get("email") or "").strip().lower()
         expected = os.environ.get("HARVESTER_ADMIN_PASSWORD", "")
-        if expected and secrets.compare_digest(supplied, expected):
+        password_ok = bool(expected) and secrets.compare_digest(supplied, expected)
+        shared_ok = sso_credentials_match(email, supplied)
+        if password_ok or shared_ok:
             session["authenticated"] = True
-            return redirect(request.args.get("next") or url_for("dashboard"))
-        error = "Incorrect password."
+            response = redirect(request.args.get("next") or url_for("dashboard"))
+            if shared_ok and _sso_secret():
+                response.set_cookie(
+                    SSO_COOKIE,
+                    sso_token(email),
+                    max_age=SSO_TTL_SECONDS,
+                    httponly=True,
+                    secure=request.is_secure or request.headers.get("x-forwarded-proto") == "https",
+                    samesite="Lax",
+                    domain=os.environ.get("TRI_SSO_DOMAIN") or None,
+                )
+            return response
+        error = "Incorrect email or password."
     return render_template("login.html", error=error)
 
 
 @app.post("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    response = redirect(url_for("login"))
+    # Clear the shared cookie too, otherwise another app signs the user straight back in.
+    response.delete_cookie(SSO_COOKIE, domain=os.environ.get("TRI_SSO_DOMAIN") or None)
+    return response
 
 
 @app.route("/")
