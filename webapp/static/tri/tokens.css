@@ -1,4 +1,4 @@
-/* tri-design 0.1.0 - generated from tokens/tokens.json. Do not edit. */
+/* tri-design 2.0.2 - generated from tokens/tokens.json. Do not edit. */
 :root {
   /* violet ramp */
   --tri-violet-50: #F5EFFE;
@@ -100,8 +100,8 @@
   /* layout */
   --tri-sidebar-width: 236px;
   --tri-sidebar-width-compact: 216px;
-  --tri-topbar-height: 52px;
-  --tri-topbar-height-compact: 48px;
+  --tri-topbar-height: 56px;
+  --tri-topbar-height-compact: 52px;
   --tri-reading-max: 760px;
 }
 
