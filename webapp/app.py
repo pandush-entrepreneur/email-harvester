@@ -576,6 +576,19 @@ def logout():
     return response
 
 
+@app.context_processor
+def inject_user_email():
+    """The shared header shows who is signed in."""
+    return {"user_email": sso_email() or os.environ.get("TRI_SSO_EMAIL", "admin@therevenueinbox.com")}
+
+
+@app.before_request
+def adopt_shared_session():
+    """A valid shared cookie counts as a local session, so templates render the full shell."""
+    if not session.get("authenticated") and sso_email():
+        session["authenticated"] = True
+
+
 @app.route("/")
 @login_required
 def dashboard():
