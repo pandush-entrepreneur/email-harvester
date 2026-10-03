@@ -744,3 +744,58 @@ select {
   .topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
   .topbar .topbar-right { width: 100%; margin-left: 0; justify-content: flex-start; flex-wrap: wrap; }
 }
+
+/* ---- mobile layout (identical in every Revenue Inbox app) ---- */
+@media (max-width: 900px) {
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 14px;
+  }
+  .topbar .brand { order: 1; min-width: 0; }
+  .topbar .brand b { white-space: nowrap; }
+  .topbar .brand small { display: none; }
+  .topbar .topbar-right { display: contents; }
+  .topbar .account { order: 2; margin-left: auto; padding-left: 0; border-left: 0; }
+  .topbar .account .who { display: none; }
+  .topbar .switcher {
+    order: 3;
+    width: 100%;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .topbar .switcher::-webkit-scrollbar { display: none; }
+  .topbar .switcher a { flex: 0 0 auto; }
+
+  .app-shell { display: block; }
+  .sidebar {
+    position: static;
+    top: auto;
+    align-self: auto;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--tri-line);
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar .section-nav,
+  .sidebar .product-nav { display: flex; gap: 6px; }
+  .sidebar .navlink,
+  .sidebar .product-nav > a { flex: 0 0 auto; padding: 7px 10px; white-space: nowrap; }
+  .sidebar .navlink small,
+  .sidebar .product-nav small { display: none; }
+  .sidebar .side-card,
+  .sidebar .key-card { display: none; }
+
+  main,
+  main.wrap { max-width: none; padding: 18px 14px 56px; }
+}
