@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page narrow"><a class="back" href="{{ url_for('dashboard') }}">← All lists</a><div class="eyebrow">NEW ENRICHMENT</div><h1>Upload a contact list</h1><p>Give the list a clear client-facing name. The original CSV is preserved unchanged.</p>
+{% if error %}<div class="alert">{{ error }}</div>{% endif %}
+<form method="post" enctype="multipart/form-data" class="panel stack">
+  <label>List name<input name="name" placeholder="SMPLC - 13.09 lists" required></label>
+  <label>CSV file<input type="file" name="file" accept=".csv,text/csv" required></label>
+  <button class="button" type="submit">Upload and detect columns</button>
+</form></section>
+{% endblock %}

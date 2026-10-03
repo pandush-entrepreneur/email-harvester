@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page narrow"><a class="back" href="{{ url_for('dashboard') }}">← All lists</a><div class="eyebrow">COLUMN DETECTION</div><h1>Confirm the mapping</h1><p>We found the CSV headers below. Confirm the three fields the engine needs.</p>
+{% if error %}<div class="alert">{{ error }}</div>{% endif %}
+<form method="post" class="panel stack">
+{% for target in targets %}<label>{{ target }}<select name="{{ target }}" required><option value="">Choose a column…</option>{% for header in headers %}<option value="{{ header }}" {% if mapping.get(target)==header %}selected{% endif %}>{{ header }}</option>{% endfor %}</select></label>{% endfor %}
+<button class="button" type="submit">Confirm and run validation</button></form></section>
+{% endblock %}

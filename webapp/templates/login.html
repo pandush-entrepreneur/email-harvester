@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Email Harvester{% endblock %}
+{% block content %}
+<section class="auth-shell">
+  <div class="auth-card">
+    <div class="eyebrow">Private operations</div>
+    <h1>Welcome back.</h1>
+    <p>Sign in to manage enrichment runs and download verified contacts.</p>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    <form method="post" class="stack">
+      <label>Admin password<input type="password" name="password" required autofocus></label>
+      <button class="button" type="submit">Open harvester</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
