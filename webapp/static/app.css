@@ -1,0 +1,703 @@
+/**
+ * Email Operations styling on tri-design tokens (Direction A - Ledger).
+ * Class names are unchanged from the previous stylesheet; only the values moved to tokens.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--tri-paper);
+  color: var(--tri-ink);
+  font: var(--tri-text-base) / var(--tri-text-base-line) var(--tri-font-ui);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--tri-font-display);
+  font-weight: var(--tri-weight-semibold);
+  letter-spacing: var(--tri-tracking-display);
+  margin: 0 0 6px;
+}
+
+:focus-visible {
+  outline: var(--tri-border-thick) solid var(--tri-focus);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------- top bar */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--tri-z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: var(--tri-topbar-height);
+  padding: 0 20px;
+  background: var(--tri-surface);
+  border-bottom: 1px solid var(--tri-line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--tri-font-display);
+  font-size: var(--tri-text-base);
+  font-weight: var(--tri-weight-semibold);
+  letter-spacing: var(--tri-tracking-display);
+}
+
+.brand small {
+  display: block;
+  color: var(--tri-ink-3);
+  font-family: var(--tri-font-ui);
+  font-size: var(--tri-text-xs);
+  font-weight: var(--tri-weight-regular);
+  letter-spacing: 0;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--tri-radius-mark);
+  background: var(--tri-violet-action);
+  color: var(--tri-on-violet);
+  font-size: 11px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.switcher a {
+  padding: 5px 8px;
+  border-radius: var(--tri-radius-control);
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-sm);
+}
+
+.switcher a:hover {
+  background: var(--tri-sunken);
+  color: var(--tri-ink);
+  text-decoration: none;
+}
+
+.switcher a.active {
+  background: var(--tri-violet-tint);
+  color: var(--tri-ink);
+  font-weight: var(--tri-weight-medium);
+}
+
+/* --------------------------------------------------------------- app layout */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  align-items: start;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.app-shell > main {
+  width: 100%;
+  min-width: 0;
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--tri-topbar-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  height: calc(100vh - var(--tri-topbar-height));
+  padding: 28px 16px 24px;
+  border-right: 1px solid var(--tri-line);
+}
+
+.product-nav {
+  display: grid;
+  gap: 6px;
+}
+
+.product-nav > a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  border-radius: var(--tri-radius-control);
+  color: var(--tri-ink-2);
+}
+
+.product-nav > a:hover {
+  background: var(--tri-sunken);
+  color: var(--tri-ink);
+  text-decoration: none;
+}
+
+.product-nav > a.active {
+  background: var(--tri-violet-tint);
+  color: var(--tri-ink);
+  font-weight: var(--tri-weight-medium);
+}
+
+.product-nav strong,
+.product-nav small {
+  display: block;
+}
+
+.product-nav small {
+  margin-top: 1px;
+  font-size: var(--tri-text-xs);
+  color: var(--tri-ink-3);
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--tri-radius-chip);
+  background: var(--tri-violet-tint);
+  color: var(--tri-violet-text);
+  font-weight: var(--tri-weight-semibold);
+}
+
+.key-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 10px;
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-xs);
+}
+
+.key-card strong,
+.key-card small {
+  display: block;
+}
+
+.key-card strong {
+  color: var(--tri-ink);
+  font-size: var(--tri-text-xs);
+}
+
+.key-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 2px;
+  background: var(--tri-success-text);
+  box-shadow: 0 0 0 3px var(--tri-success-bg);
+}
+
+.key-dot.busy {
+  background: var(--tri-warning-text);
+  box-shadow: 0 0 0 3px var(--tri-warning-bg);
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 34px 26px 72px;
+}
+
+/* -------------------------------------------------------------------- hero */
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 6px 0 30px;
+}
+
+.hero h1,
+.page h1 {
+  font-size: var(--tri-text-4xl);
+  line-height: 1.05;
+  margin: 6px 0 10px;
+}
+
+.hero p,
+.page > p,
+.detail-head p {
+  max-width: 650px;
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-lg);
+}
+
+.eyebrow {
+  font-size: var(--tri-text-xs);
+  font-weight: var(--tri-weight-semibold);
+  color: var(--tri-violet-text);
+}
+
+.page {
+  padding-top: 8px;
+}
+
+.page.narrow {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: var(--tri-ink-2);
+}
+
+.stack {
+  display: grid;
+  gap: 18px;
+}
+
+/* ------------------------------------------------------------------ actions */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  background: var(--tri-violet-action);
+  border: 1px solid var(--tri-violet-action);
+  border-radius: var(--tri-radius-control);
+  color: var(--tri-on-violet);
+  font: var(--tri-weight-medium) var(--tri-text-sm) / 1.3 var(--tri-font-ui);
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--tri-violet-action-hover);
+  border-color: var(--tri-violet-action-hover);
+  text-decoration: none;
+}
+
+.button.small {
+  padding: 6px 10px;
+}
+
+.button.secondary {
+  background: var(--tri-surface);
+  border-color: var(--tri-control-border);
+  color: var(--tri-ink);
+}
+
+.button.secondary:hover {
+  background: var(--tri-surface);
+  border-color: var(--tri-ink-3);
+}
+
+.button.danger {
+  background: transparent;
+  border-color: var(--tri-danger-text);
+  color: var(--tri-danger-text);
+}
+
+.button.danger:hover {
+  background: var(--tri-danger-bg);
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ghost {
+  padding: 7px 10px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--tri-radius-control);
+  color: var(--tri-ink-2);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  background: var(--tri-sunken);
+  color: var(--tri-ink);
+}
+
+.actions {
+  margin-top: 18px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.actions p,
+.section-head p {
+  margin: 4px 0 0;
+  color: var(--tri-ink-2);
+}
+
+.actions h2,
+.section-head h2 {
+  margin: 0;
+  font-size: var(--tri-text-xl);
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 36px 0 14px;
+}
+
+/* ------------------------------------------------------------------ metrics */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-grid.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metric-grid article,
+.panel,
+.job-card,
+.report-grid > div,
+.auth-card {
+  padding: 16px 18px;
+  background: var(--tri-surface);
+  border: 1px solid var(--tri-line);
+  border-radius: var(--tri-radius-panel);
+}
+
+.metric-grid span,
+.metric-grid small,
+.job-stats span,
+.report-grid span {
+  display: block;
+  color: var(--tri-ink-3);
+  font-size: var(--tri-text-xs);
+}
+
+.metric-grid strong {
+  display: block;
+  margin: 4px 0;
+  font-family: var(--tri-font-display);
+  font-size: var(--tri-text-3xl);
+  font-variant-numeric: var(--tri-numeric-variant);
+}
+
+/* ---------------------------------------------------------------- job cards */
+
+.jobs {
+  display: grid;
+  gap: 10px;
+}
+
+.job-card {
+  display: block;
+}
+
+.job-card:hover {
+  border-color: var(--tri-line-strong);
+}
+
+.job-top,
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.job-top h3 {
+  margin: 0 0 2px;
+  font-size: var(--tri-text-lg);
+}
+
+.muted {
+  color: var(--tri-ink-2);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 7px;
+  border-radius: var(--tri-radius-chip);
+  background: var(--tri-sunken);
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-xs);
+  font-weight: var(--tri-weight-medium);
+}
+
+.status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.status.running,
+.status.running_full,
+.status.running_sample {
+  background: var(--tri-info-bg);
+  color: var(--tri-info-text);
+}
+
+.status.complete {
+  background: var(--tri-success-bg);
+  color: var(--tri-success-text);
+}
+
+.status.failed {
+  background: var(--tri-danger-bg);
+  color: var(--tri-danger-text);
+}
+
+.status.stopping,
+.status.pausing {
+  background: var(--tri-warning-bg);
+  color: var(--tri-warning-text);
+}
+
+.progress {
+  height: 6px;
+  margin: 18px 0;
+  overflow: hidden;
+  border-radius: var(--tri-radius-track);
+  background: var(--tri-sunken);
+}
+
+.progress.large {
+  height: 8px;
+  margin: 14px 0 24px;
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  border-radius: var(--tri-radius-track);
+  background: var(--tri-violet-action);
+  transition: width var(--tri-duration-slow) var(--tri-ease-out);
+}
+
+.job-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  font-variant-numeric: var(--tri-numeric-variant);
+}
+
+.job-stats.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.job-stats strong {
+  font-size: var(--tri-text-lg);
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.report-grid > div {
+  padding: 14px 16px;
+}
+
+.report-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--tri-text-xl);
+  font-variant-numeric: var(--tri-numeric-variant);
+}
+
+/* ------------------------------------------------------------------- panels */
+
+.panel {
+  margin-top: 24px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-sm);
+  font-weight: var(--tri-weight-medium);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 9px 10px;
+  background: var(--tri-surface);
+  border: 1px solid var(--tri-control-border);
+  border-radius: var(--tri-radius-control);
+  color: var(--tri-ink);
+  font: var(--tri-text-base) / 1.4 var(--tri-font-ui);
+}
+
+.notice {
+  margin: 18px 0;
+  padding: 11px 13px;
+  border-left: var(--tri-border-thick) solid var(--tri-violet-action);
+  border-radius: var(--tri-radius-chip);
+  background: var(--tri-violet-tint);
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-sm);
+}
+
+.alert {
+  margin: 18px 0;
+  padding: 11px 13px;
+  border-left: var(--tri-border-thick) solid var(--tri-danger-text);
+  border-radius: var(--tri-radius-chip);
+  background: var(--tri-danger-bg);
+  color: var(--tri-danger-text);
+  font-size: var(--tri-text-sm);
+}
+
+.empty {
+  padding: 44px 20px;
+  border: 1px dashed var(--tri-line-strong);
+  border-radius: var(--tri-radius-panel);
+  color: var(--tri-ink-2);
+  text-align: center;
+}
+
+.optional {
+  display: inline;
+  color: var(--tri-ink-3);
+  font-size: var(--tri-text-xs);
+  font-weight: var(--tri-weight-regular);
+}
+
+.log {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: var(--tri-radius-panel);
+  background: var(--tri-sunken);
+  color: var(--tri-ink-2);
+}
+
+.log summary {
+  cursor: pointer;
+  color: var(--tri-ink);
+  font-weight: var(--tri-weight-medium);
+}
+
+.log pre {
+  max-height: 420px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--tri-font-mono);
+  font-size: var(--tri-text-xs);
+}
+
+/* --------------------------------------------------------------------- auth */
+
+.auth-shell {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - 180px);
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  padding: 34px 36px;
+}
+
+.auth-card h1 {
+  margin: 8px 0;
+  font-size: var(--tri-text-2xl);
+}
+
+.auth-card p {
+  margin-bottom: 24px;
+  color: var(--tri-ink-2);
+  font-size: var(--tri-text-sm);
+}
+
+/* --------------------------------------------------------------- responsive */
+
+@media (max-width: 900px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--tri-line);
+  }
+
+  .product-nav {
+    display: flex;
+    gap: 6px;
+  }
+
+  main {
+    padding: 26px 16px 56px;
+  }
+
+  .hero,
+  .detail-head,
+  .actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .metric-grid,
+  .metric-grid.four,
+  .report-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .job-stats,
+  .job-stats.three {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .switcher {
+    display: none;
+  }
+}
