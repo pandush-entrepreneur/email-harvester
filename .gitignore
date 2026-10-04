@@ -1,4 +1,6 @@
 .env
+mailtester new key
+07.09/
 *.key
 clients/*
 !clients/.gitkeep

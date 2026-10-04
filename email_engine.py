@@ -545,7 +545,15 @@ def select_sample_domains(usable, domain_limit):
 
 
 class MailTesterClient:
-    def __init__(self, output_dir, interval_ms, daily_cap, progress_every=500, projected_total=None):
+    def __init__(
+        self,
+        output_dir,
+        interval_ms,
+        daily_cap,
+        progress_every=500,
+        projected_total=None,
+        allowed_connections=1,
+    ):
         self.output_dir = output_dir
         self.interval_seconds = interval_ms / 1000
         self.daily_cap = daily_cap
@@ -564,6 +572,7 @@ class MailTesterClient:
         self.io_lock = threading.Lock()
         self.connection_lock = threading.Lock()
         self.high_connection_streak = 0
+        self.allowed_connections = max(1, allowed_connections)
         self.request_domains = []
 
     def load_history(self):
@@ -604,7 +613,10 @@ class MailTesterClient:
 
     def high_connection(self, result):
         try:
-            return result.get("connections") is not None and int(result.get("connections")) > 1
+            return (
+                result.get("connections") is not None
+                and int(result.get("connections")) > self.allowed_connections
+            )
         except (TypeError, ValueError):
             return False
 
@@ -640,7 +652,7 @@ class MailTesterClient:
             if error.code not in {408, 429, 500, 502, 503, 504}:
                 raise
             data = {"message": "Timeout", "code": f"http_{error.code}"}
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
             data = {"message": "Timeout", "code": "network_error"}
 
         checked_at = datetime.now(timezone.utc).isoformat()
@@ -705,9 +717,15 @@ class MailTesterClient:
                 with self.connection_lock:
                     self.high_connection_streak += 1
                     streak = self.high_connection_streak
-                print(f"connections={result.get('connections')} for {email}; pausing 30s before retry ({streak}/5).")
+                print(
+                    f"connections={result.get('connections')} exceeded the configured worker count "
+                    f"({self.allowed_connections}) for {email}; pausing 30s before retry ({streak}/5)."
+                )
                 if streak >= 5:
-                    raise SystemExit("MailTester connections stayed above 1 for 5 consecutive readings. Halting.")
+                    raise SystemExit(
+                        "MailTester connections stayed above the configured worker count "
+                        "for 5 consecutive readings. Halting."
+                    )
                 time.sleep(30)
                 continue
             with self.connection_lock:
@@ -721,9 +739,15 @@ class MailTesterClient:
                 with self.connection_lock:
                     self.high_connection_streak += 1
                     streak = self.high_connection_streak
-                print(f"connections={result.get('connections')} for {email}; pausing 30s before retry ({streak}/5).")
+                print(
+                    f"connections={result.get('connections')} exceeded the configured worker count "
+                    f"({self.allowed_connections}) for {email}; pausing 30s before retry ({streak}/5)."
+                )
                 if streak >= 5:
-                    raise SystemExit("MailTester connections stayed above 1 for 5 consecutive readings. Halting.")
+                    raise SystemExit(
+                        "MailTester connections stayed above the configured worker count "
+                        "for 5 consecutive readings. Halting."
+                    )
                 time.sleep(30)
                 continue
             with self.connection_lock:
@@ -984,7 +1008,14 @@ def run_pipeline(rows, out_fields, usable, skipped, duplicates, output_dir, inte
         by_domain[contact["domain"]].append(contact)
 
     budget = budget_math(len(selected_contacts), len(domains), interval_ms)
-    client = MailTesterClient(output_dir, interval_ms, daily_cap, progress_every=500, projected_total=budget["total"])
+    client = MailTesterClient(
+        output_dir,
+        interval_ms,
+        daily_cap,
+        progress_every=500,
+        projected_total=budget["total"],
+        allowed_connections=workers,
+    )
     primary_enriched = {}
     skipped_by_index = {item["input_index"]: item for item in skipped}
     duplicate_by_primary, duplicate_by_index = build_duplicate_map(duplicates)
@@ -1445,7 +1476,14 @@ def run_diagnostic(usable, output_dir, interval_ms, daily_cap, workers, count):
         }
         for domain in domains
     ]
-    client = MailTesterClient(output_dir, interval_ms, daily_cap, progress_every=500, projected_total=71_155)
+    client = MailTesterClient(
+        output_dir,
+        interval_ms,
+        daily_cap,
+        progress_every=500,
+        projected_total=71_155,
+        allowed_connections=workers,
+    )
     started = time.monotonic()
     before = len(client.request_domains)
     results = execute_tasks(tasks, client, workers, force_live=True)
@@ -1459,7 +1497,10 @@ def run_diagnostic(usable, output_dir, interval_ms, daily_cap, workers, count):
     projected_seconds = effective_ms * 71_155 / 1000
     transient_rate = transient_count / max(len(results), 1)
     mx_error_rate = messages["Mx Error"] / max(len(results), 1)
-    sane_connections = all(key in {"", "0", "1", "None"} or int(key) <= 3 for key in connections)
+    sane_connections = all(
+        key in {"", "0", "1", "None"} or int(key) <= workers
+        for key in connections
+    )
     clean = effective_ms < 300 and mx_error_rate <= 0.03 and adjacent_repeats == 0 and sane_connections
     print("300-request diagnostic")
     print(f"Workers: {workers}")
